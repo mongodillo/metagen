@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { IPFSProvider } from "./hooks/ipfs";
+//import { IPFSProvider } from "./hooks/ipfs";
 import Metagen from "./pages/metagen";
 import Toast from "./components/toast";
 import SpinLoader from "./components/spinloader";
@@ -26,7 +26,6 @@ function App() {
   }, [darkMode]);
 
   const spinProps = { spinLoad, setSpinLoad };
-  const themeProps = { darkMode, setDarkMode };
   const toastProps = { setToastList, setToastProcessList, toastList, toastProcessList };
 
   return (
@@ -73,8 +72,8 @@ function App() {
 
 export default function Index() {
   return (
-    <IPFSProvider>
-      <App />
-    </IPFSProvider>
+    // <IPFSProvider>
+    <App />
+    //</IPFSProvider>
   );
 }

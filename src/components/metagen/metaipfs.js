@@ -6,7 +6,7 @@ let ipfsInfura = null;
 //let ipfsPinata = null;
 
 const MetaIPFS = ({ metadata, setToastList, toastList, setSpinLoad, toastProcessList, setToastProcessList }) => {
-  const ipfs = useIPFS();
+ // const ipfs = useIPFS();
   const [imgFiles, setImgFiles] = useState(null);
   const [urlArr, setUrlArr] = useState([]);
   const [finalImg, setFinalImg] = useState({ imgsrc: "", length: "" });
@@ -112,8 +112,8 @@ const MetaIPFS = ({ metadata, setToastList, toastList, setSpinLoad, toastProcess
       let count = 0;
       let urls = [];
       // let fileHashes = [];
-      console.log(ipfs);
-      for await (const file of ipfs.addAll(imgFiles, options)) {
+      await startInfura();
+         for await (const file of ipfsInfura.addAll(imgFiles, options)) {
         if (count < imgFiles.length) {
           const url = `https://ipfs.infura.io/ipfs/${file.cid.toString()}`;
           //let hash = { cid: file.cid };
@@ -129,7 +129,7 @@ const MetaIPFS = ({ metadata, setToastList, toastList, setSpinLoad, toastProcess
       let ipfsURL = `<a href="https://ipfs.infura.io/ipfs/${finalCID}" target="_blank" className="link break-all">https://ipfs.infura.io/ipfs/${finalCID}</a>`;
       setUrlArr(urls);
       setFinalImg({ imgsrc: urls[urls.length - 1], length: urls.length });
-      await startInfura();
+
       /*for await (const hash of ipfsInfura.pin.addAll(fileHashes)) {
         console.log(hash);
       }*/

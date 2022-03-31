@@ -2,10 +2,9 @@
   "name": "metagensite",
   "version": "0.1.0",
   "private": true,
-  "main": "postcss.config.js",
   "dependencies": {
-    "@testing-library/jest-dom": "^5.16.3",
-    "@testing-library/react": "^12.1.4",
+    "@testing-library/jest-dom": "^5.16.1",
+    "@testing-library/react": "^12.1.2",
     "@testing-library/user-event": "^13.5.0",
     "daisyui": "^2.13.4",
     "html-react-parser": "^1.4.10",
@@ -13,8 +12,8 @@
     "ipfs-http-client": "^56.0.1",
     "jszip": "^3.8.0",
     "random-seed-weighted-chooser": "^1.0.14",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "react-icons": "^4.3.1",
     "react-scripts": "5.0.0",
     "seedrandom": "^3.0.5",
@@ -57,12 +56,13 @@
     "util": "^0.12.4"
   },
   "description": "This is a small tool to aid in the randomising and generating of Metadata and images. You can access this tool from its github pages url at : \"\"",
+  "main": "postcss.config.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mongodillo/metagen.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "mongodillo",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/mongodillo/metagen/issues"
