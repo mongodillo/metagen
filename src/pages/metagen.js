@@ -9,8 +9,6 @@ import MetaIPFS from "../components/metagen/metaipfs";
 
 import { metaRandomGen } from "../components/metagen/metarandomgen";
 
-//import WorkerRandGen from "../workers/randomgenworker";
-
 import JSZip from "jszip";
 
 const Metagen = (props) => {
@@ -20,6 +18,7 @@ const Metagen = (props) => {
   const [maxGen, setMaxGen] = useState(0);
   const [seed, setSeed] = useState("");
   const [totalGen, setTotalGen] = useState("");
+  const [collectionInfo, setCollectionInfo] = useState({ name: "", description: "", imagecid: "" });
   const [meta, setMeta] = useState([]);
   const [loadingWidth, setLoadingWidth] = useState(0);
   const [traitCount, setTraitCount] = useState({});
@@ -28,16 +27,14 @@ const Metagen = (props) => {
 
   const [openTab, setOpenTab] = useState(1);
 
+  const handleCollectionInput = (e) => {
+    const { name, value } = e.target;
+    const info = { ...collectionInfo };
+    info[name] = value;
+    setCollectionInfo(info);
+  };
+
   const getWeights = (traitsArray) => {
-    /*const loadImageBlob = (imgURL) => {
-      return new Promise((resolve, reject) => {
-        fetch(imgURL)
-          .then((result) => resolve(result.blob()))
-          .catch((err) => {
-            reject(`Error generating image blob: ${err}`);
-          });
-      });
-    };*/
     let w = {};
     if (traitsArray[0].trait === "") {
       setToastList([...toastList, { type: "alert-error", status: "error", message: `Traits field is empty` }]);
@@ -65,41 +62,9 @@ const Metagen = (props) => {
             }
           }
         }
-        /* Object.keys(w).forEach((trait) => {
-          w[trait].forEach(async (option, i) => {
-            let blob = await loadImageBlob(option.imgsrc);
-            let localURL = URL.createObjectURL(blob);
-            if (!w[trait][i]["localurl"]) w[trait][i]["localurl"] = "";
-            w[trait][i]["localurl"] = localURL;
-          });
-        });*/
 
-        /*
-        const weightArray = traits.reduce((weightArr, obj) => {
-          let key = obj.trait;
-          if (!weightArr[key]) weightArr[key] = [];
-          weightArr[key] = obj.options;
-          return weightArr;
-        }, {});
-
-        let issame = weightArray.toString() === w.toString();
-        */
         setWeight(w);
-        //setOpenTab(2);
-        /*
-        let totalWeights = {};
-        Object.keys(w).forEach((traitType) => {
-          if (!totalWeights[traitType]) totalWeights[traitType] = "";
 
-          let traitWeights = [];
-
-          w[traitType].forEach((traitOption) => {
-            traitWeights.push(traitOption.weight);
-          });
-          totalWeights[traitType] = traitWeights.reduce((a, b) => a + b, 0);
-        });
-        let totalGenOptions = Object.values(totalWeights).reduce((a, b) => a + b, 0);
-*/
         let genOptions = [];
         for (let i = 0; i < Object.keys(w).length; i++) {
           genOptions.push(w[Object.keys(w)[i]].length);
@@ -109,7 +74,7 @@ const Metagen = (props) => {
           return prevVal * currVal;
         });
         setMaxGen(parseInt(totalOptions));
-        //setMaxGen(parseInt(totalGenOptions));
+
         setToastList([...toastList, { type: "alert-success", status: "success", message: `Weights Generated` }]);
       }
     }
@@ -121,22 +86,12 @@ const Metagen = (props) => {
       setSeed(value);
     } else if (name === "totalGen") {
       setTotalGen(Math.max(Math.min(value, maxGen), 0));
-
-      /* let w = weights;
-
-      Object.keys(w).forEach((trait) => {
-        w[trait].forEach((option, i) => {
-          w[trait][i].max = parseInt((value * rarityWeights[option.rarity]) / 1000);
-        });
-      });
-      setWeight(w);*/
     }
   };
 
   const countTraits = (metadata) => {
     let attrObj = {};
     let attrCount = {};
-    // Object.keys(weights).forEach((trait) => (attrObj[trait] = []));
 
     metadata.forEach((nft) => {
       nft.attributes.forEach((trait) => {
@@ -181,32 +136,7 @@ const Metagen = (props) => {
 
         setSpinLoad(true);
 
-        var randommeta;
-
-        /*  const bodydata = {
-          weights,
-          seed,
-          totalGen,
-        };
-        const options = {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json;charset=UTF-8",
-          },
-          body: JSON.stringify(bodydata),
-        };
-
-         try {
-          const fetchresponse = await fetch(" https://dropletworker.mongodillo.workers.dev/randomgen", options);
-          const responseJSON = await fetchresponse.json();
-          console.log("Fetch: Combined MD5 hash of all generated NFTs:", responseJSON.data.hash);
-          randommeta = responseJSON.data.metadata;
-        } catch (err) {
-          console.log("Fetch Error:", err);
-          randommeta = await metaRandomGen(weights, seed, totalGen);
-        }*/
-        randommeta = await metaRandomGen(weights, seed, totalGen);
+        const randommeta = await metaRandomGen(weights, seed, totalGen, collectionInfo.name, collectionInfo.description);
         setMeta(randommeta);
         setToastProcessList([
           ...toastProcessList.splice(
@@ -229,7 +159,7 @@ const Metagen = (props) => {
 
   //save Metadata Generated to JSON file
   const saveMetatoFile = (jsonData, filename) => {
-    var downloadJSON = jsonData.map(({ image, ...rest }) => rest); //strips out image field
+    var downloadJSON = jsonData.map(({ imagedata, ...rest }) => rest); //strips out image field
 
     const fileData = JSON.stringify(downloadJSON, null, 2);
     const blob = new Blob([fileData], { type: "application/json" });
@@ -319,7 +249,6 @@ const Metagen = (props) => {
       for (let i = 0; i < meta.length; i++) {
         count++;
         ctx.clearRect(0, 0, 400, 400);
-        //canvas.setAttribute("id", `canvas${i}`);
 
         const images = [];
 
@@ -327,13 +256,7 @@ const Metagen = (props) => {
           meta[i].attributes.forEach((trait) => {
             if (w[trait.trait_type][traitArr[trait.trait_type].indexOf(trait.value)]) {
               if (trait.value !== "None") {
-                if (
-                  // w[trait.trait_type][traitArr[trait.trait_type].indexOf(trait.value)].localurl !== "" ||
-                  w[trait.trait_type][traitArr[trait.trait_type].indexOf(trait.value)].imgsrc !== ""
-                ) {
-                  // w[trait.trait_type][traitArr[trait.trait_type].indexOf(trait.value)].localurl
-                  // ? images.push(w[trait.trait_type][traitArr[trait.trait_type].indexOf(trait.value)].localurl)
-                  //:
+                if (w[trait.trait_type][traitArr[trait.trait_type].indexOf(trait.value)].imgsrc !== "") {
                   images.push(w[trait.trait_type][traitArr[trait.trait_type].indexOf(trait.value)].imgsrc);
                 } else {
                   statuslog.push(`Missing Image File:  NFT #${i} - Trait: "${trait.trait_type}" Option: "${trait.value}" `);
@@ -351,17 +274,10 @@ const Metagen = (props) => {
               ctx.drawImage(layer, 0, 0, 400, 400);
             });
 
-            /* if (!newmeta[i].localurl) newmeta[i].localurl = "";
-            canvas.toBlob((blob) => {
-              const localurl = URL.createObjectURL(blob);
-
-              newmeta[i].localurl = localurl;
-            });*/
             const base64Data = canvas.toDataURL();
-            newmeta[i].image = base64Data;
+            newmeta[i].imagedata = base64Data;
           } else {
-            newmeta[i].image = "";
-            //newmeta[i].localurl = "";
+            newmeta[i].imagedata = "";
           }
         } catch (err) {
           setToastList([...toastList, { type: "alert-error", status: "error", message: `Canvas Drawing: ${err.message}` }]);
@@ -373,13 +289,6 @@ const Metagen = (props) => {
       canvas.remove();
       setMeta(newmeta);
 
-      /* Object.keys(w).forEach((trait) => {
-        w[trait].forEach(async (option, i) => {
-          URL.revokeObjectURL(option.localurl);
-          w[trait][i]["localurl"] = "";
-        });
-      });*/
-
       let timecomplete = new Date().getTime();
       let timeelapse = timecomplete - timenow;
       var days = Math.floor(timeelapse / (1000 * 60 * 60 * 24));
@@ -388,7 +297,6 @@ const Metagen = (props) => {
       var seconds = Math.floor((timeelapse % (1000 * 60)) / 1000);
       let addToast = [];
       if (statuslog.length > 0)
-        //addToast.push({ type: "alert-error", status: "error", message: `${statuslog ? `<div>${statuslog}</div>` : ""}` });
         addToast.push({
           type: "alert-error",
           status: "error",
@@ -431,14 +339,14 @@ const Metagen = (props) => {
     let link;
     let zipURL;
     try {
-      let imgblobs = await Promise.all(meta.map(async (nft) => loadImageBlob(nft.image)));
+      let imgblobs = await Promise.all(meta.map(async (nft) => loadImageBlob(nft.imagedata)));
       imgblobs.forEach((imgblob, i) => {
         if (imgblob?.type?.includes("image")) {
           imgfolder.file(`${i + 1}.png`, imgblob);
         }
       });
 
-      const metadata = meta.map(({ image, ...rest }) => rest); //strips out image field
+      const metadata = meta.map(({ imagedata, ...rest }) => rest); //strips out image field
       const fileData = JSON.stringify(metadata, null, 2);
       const blobMeta = new Blob([fileData], { type: "application/json" });
       zip.file(`metadata.json`, blobMeta);
@@ -488,7 +396,14 @@ const Metagen = (props) => {
       <Metaloader isLoading={isLoading} loadingWidth={loadingWidth} />
 
       <h1 className="font-bold text-lg sm:text-2xl lg:text-4xl xl:text-5xl mb-5">Random Metadata and Image Generator</h1>
-
+      <div className="w-full flex justify-end">
+        <button
+          className="mx-4 my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm"
+          onClick={() => saveMetatoFile(meta, "Metadata")}
+        >
+          Download Metadata
+        </button>
+      </div>
       <Metatab openTab={openTab} setOpenTab={setOpenTab} />
       <div className="px-5 pt-5 border rounded-b border-accent border-t-8 ">
         <div className={openTab === 1 ? "block" : "hidden"} id="traitsform">
@@ -515,6 +430,41 @@ const Metagen = (props) => {
             </div>
           </div>
           <div className="my-5 font-bold">Max Permutations: {Intl.NumberFormat().format(parseInt(maxGen))}</div>
+          <div className="form-control w-full max-w-full mb-5">
+            <div className="mt-5">
+              <label className="label flex-col  items-start">
+                <span className="label-text text-xl font-semibold">NFT Collection Name</span>
+                <span className="text-error text-2xl">
+                  *
+                  <span className="text-base-content text-sm">
+                    Your NFT name will be numbered with this as a prefix. e.g. "Cryptopunk" as a Collection Name = "Cryptopunk #1" for the first NFT
+                    minted
+                  </span>
+                </span>
+              </label>
+              <input
+                type="text"
+                placeholder="Enter collection name."
+                className="input input-bordered w-full font-medium tracking-wide"
+                name="name"
+                value={collectionInfo.name}
+                onChange={handleCollectionInput}
+              />
+            </div>
+
+            <div className="mt-5">
+              <label className="label">
+                <span className="label-text text-xl font-semibold">NFT Collection Description</span>
+              </label>
+              <textarea
+                className="textarea textarea-bordered w-full font-medium tracking-wide"
+                placeholder={`Describe your collection.\n(e.g. 'this is a collection of 5,000 little monkeys, each with its own unique trait')`}
+                name="description"
+                value={collectionInfo.description}
+                onChange={handleCollectionInput}
+              ></textarea>
+            </div>
+          </div>
           <div className="flex flex-row w-full max-w-sm ">
             <label className="label w-44">
               <span className="label-text">Seed Phrase (Optional): </span>
@@ -549,12 +499,6 @@ const Metagen = (props) => {
               </button>
             </div>
             <div className="flex lg:flex-row flex-col items-center ">
-              <button
-                className="mx-4 my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm"
-                onClick={() => saveMetatoFile(meta, "Metadata")}
-              >
-                Download Metadata
-              </button>
               <label htmlFor="metaupload" className="my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm">
                 Load Metadata
               </label>
@@ -589,12 +533,6 @@ const Metagen = (props) => {
               </button>
             </div>
             <div className="flex lg:flex-row flex-col items-center ">
-              <button
-                className="mx-4 my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm"
-                onClick={() => saveMetatoFile(meta, "Metadata")}
-              >
-                Download Metadata
-              </button>
               <label htmlFor="metauploadimginput" className="my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm">
                 Load Metadata
               </label>
@@ -616,11 +554,14 @@ const Metagen = (props) => {
         <div className={openTab === 4 ? "block" : "hidden"} id="ipfs">
           <MetaIPFS
             metadata={meta}
+            setMeta={setMeta}
             setToastList={setToastList}
             toastList={toastList}
             setSpinLoad={setSpinLoad}
             setToastProcessList={setToastProcessList}
             toastProcessList={toastProcessList}
+            setCollectionInfo={setCollectionInfo}
+            collectionInfo={collectionInfo}
           />
         </div>
       </div>

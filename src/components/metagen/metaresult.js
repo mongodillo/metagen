@@ -95,7 +95,7 @@ const Metaresult = ({ meta, weights, setMeta }) => {
             <div key={`${nft.name}/card/${i}`} className="my-1 px-1 w-full  lg:my-4 lg:px-4 lg:w-1/2 ">
               <article className="overflow-hidden  rounded-2xl shadow-lg border-2 border-accent grid grid-rows-3 grid-cols-4 grid-flow-col ">
                 <div className="row-span-3 col-span-2 ">
-                  <img src={nft.image} alt="NFT Gen" className="w-full" />
+                  <img src={nft.imagedata} alt="NFT Gen" className="w-full" />
                 </div>
                 <div className={`row-span-3 col-span-2 `}>
                   <div className="flex flex-row items-center  mt-2">
@@ -128,7 +128,7 @@ const Metaresult = ({ meta, weights, setMeta }) => {
           nftArray.map((nft, i) => (
             <img
               key={`${nft.name}/grid/${i}`}
-              src={nft.image}
+              src={nft.imagedata}
               alt="NFT Gen"
               className="px-1  my-1 md:w-36  w-32  hover:cursor-pointer hover:scale-150"
               onClick={() => {

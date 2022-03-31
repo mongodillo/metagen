@@ -22,7 +22,7 @@ const Nftmodal = ({ nft, openNftcard, setOpenNftcard, meta, setMeta, weights }) 
     inputopenarr[i] = true;
     setInputOpen(inputopenarr);
 
-    setImgURL(nft.image);
+    setImgURL(nft.imagedata);
 
     let filteroption = {};
     nft.attributes.forEach((attribute) => {
@@ -54,7 +54,7 @@ const Nftmodal = ({ nft, openNftcard, setOpenNftcard, meta, setMeta, weights }) 
   const handleTraitSave = (attr, i) => {
     let currTrait = [...traitEdit];
     let newnft = nft;
-    newnft.image = imgURL;
+    newnft.imagedata = imgURL;
     newnft.attributes = currTrait;
     let metaupdate = [...meta];
     metaupdate[nftno - 1] = newnft;
@@ -154,7 +154,7 @@ const Nftmodal = ({ nft, openNftcard, setOpenNftcard, meta, setMeta, weights }) 
             <div className="modal-box ">
               <article className="overflow-hidden  rounded-2xl shadow-lg border-2 border-accent grid grid-rows-3 grid-cols-4 grid-flow-col ">
                 <div className="row-span-3 col-span-2 ">
-                  <img src={editOpen ? imgURL : nftSelect.image} alt="NFT Gen" className="w-full" />
+                  <img src={editOpen ? imgURL : nftSelect.imagedata} alt="NFT Gen" className="w-full" />
                 </div>
                 <div className={`row-span-3 col-span-2 text-left `}>
                   <h1 className="text-sm lg:text-base font-bold underline ml-2">{nftSelect.name}</h1>
