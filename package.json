@@ -55,5 +55,17 @@
     "react-app-rewired": "^2.2.1",
     "tailwindcss": "^3.0.23",
     "util": "^0.12.4"
-  }
+  },
+  "description": "This is a small tool to aid in the randomising and generating of Metadata and images. You can access this tool from its github pages url at : \"\"",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mongodillo/metagen.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mongodillo/metagen/issues"
+  },
+  "homepage": "https://mongodillo.github.io/metagen/"
 }
