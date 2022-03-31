@@ -64,7 +64,7 @@ const Metatab = ({ openTab, setOpenTab }) => {
             3. Image Ouput
           </a>
         </li>
-        <li className=" last:mr-0 flex-auto text-center">
+        {/* <li className=" last:mr-0 flex-auto text-center">
           <a
             className={
               "text-xs font-bold uppercase px-5 py-3  rounded-t block leading-normal border-accent border-t border-r border-l  " +
@@ -83,7 +83,7 @@ const Metatab = ({ openTab, setOpenTab }) => {
           >
             4. IPFS Upload
           </a>
-        </li>
+          </li>*/}
       </ul>
     </>
   );
