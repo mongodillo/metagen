@@ -1,0 +1,59 @@
+{
+  "name": "metagensite",
+  "version": "0.1.0",
+  "private": true,
+  "main": "postcss.config.js",
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.16.3",
+    "@testing-library/react": "^12.1.4",
+    "@testing-library/user-event": "^13.5.0",
+    "daisyui": "^2.13.4",
+    "html-react-parser": "^1.4.10",
+    "ipfs-core": "^0.14.1",
+    "ipfs-http-client": "^56.0.1",
+    "jszip": "^3.8.0",
+    "random-seed-weighted-chooser": "^1.0.14",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-icons": "^4.3.1",
+    "react-scripts": "5.0.0",
+    "seedrandom": "^3.0.5",
+    "spark-md5": "^3.0.2",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-app-rewired start",
+    "build": "GENERATE_SOURCEMAP=false react-app-rewired build",
+    "test": "react-app-rewired test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not ie <= 99",
+      "not android <= 4.4.4",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.4",
+    "buffer": "^6.0.3",
+    "postcss": "^8.4.12",
+    "process": "^0.11.10",
+    "react-app-rewired": "^2.2.1",
+    "tailwindcss": "^3.0.23",
+    "util": "^0.12.4"
+  }
+}
