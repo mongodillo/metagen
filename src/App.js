@@ -30,7 +30,7 @@ function App() {
 
   return (
     <div data-theme={darkMode} className="font-sans bg-base-100 text-base-content  ">
-      <div className=" sticky top-0 z-50 navbar pl-4  bg-primary  text-primary-content py-0 h-16">
+      <div className=" sticky top-0 z-50 navbar pl-4  bg-primary  text-primary-content py-0 ">
         <div className="flex-1  h-full flex-col items-start">
           <span className="font-bold text-3xl">RANDOM META GENERATOR</span>
           <div className="flex flex-row gap-2  ">
