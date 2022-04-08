@@ -1,47 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { create as httpCreate, CID } from "ipfs-http-client";
+import { copyTextOnClick } from "../../utils/copyTextOnClick";
 import { useIPFS } from "../../hooks/ipfs";
 
-let ipfsInfura = null;
-//let ipfsPinata = null;
-
-const MetaIPFS = ({
-  metadata,
-  setMeta,
-  setToastList,
-  toastList,
-  setSpinLoad,
-  toastProcessList,
-  setToastProcessList,
-  setCollectionInfo,
-  collectionInfo,
-}) => {
-  // const ipfs = useIPFS();
-  const [imgFiles, setImgFiles] = useState(null);
-  const [urlArr, setUrlArr] = useState([]);
-  const [finalImg, setFinalImg] = useState({ imgsrc: "", length: "" });
-  const [ipfsImg, setIpfsImg] = useState({ first: "", last: "" });
-
-  const [ipfscid, setIPFScid] = useState("");
+const MetaIPFS = ({ metadata, setMeta, setToastList, setSpinLoad, setToastProcessList }) => {
+  const ipfs = useIPFS();
+  const [ipfsImg, setIpfsImg] = useState({
+    infura: "https://ipfs.infura.io/ipfs/",
+    cf: "https://cloudflare-ipfs.com/ipfs/",
+    dweb: "https://dweb.link/ipfs/",
+    ipfs: "https://ipfs.io/ipfs/",
+    pinata: "https://gateway.pinata.cloud/ipfs/",
+    length: 0,
+    localfirst: "",
+    locallast: "",
+  });
 
   const address = "dropletImgs";
   var files = [];
   let finalCID;
-
-  async function startInfura() {
-    if (ipfsInfura) {
-      console.log("IPFS Infura already started");
-    } else {
-      try {
-        console.time("IPFS Infura Started");
-        ipfsInfura = await httpCreate("https://ipfs.infura.io:5001/api/v0");
-        console.timeEnd("IPFS Infura Started");
-      } catch (error) {
-        console.error("IPFS Infura init error:", error);
-        ipfsInfura = null;
-      }
-    }
-  }
 
   async function deleteDropletDB(dbName) {
     if (indexedDB) {
@@ -62,17 +38,18 @@ const MetaIPFS = ({
     }
   }
   async function stopIPFS() {
-    if (ipfsInfura) ipfsInfura = null;
     /* if (ipfsInfura && ipfsInfura.stop) {
       console.log("Stopping IPFS Infura");
       ipfsInfura.stop().catch((err) => console.error(err));
       ipfsInfura = null;
     }*/
-    deleteDropletDB("dropletblue");
+    deleteDropletDB("metagen");
     console.log("IPFS STOPPED");
   }
 
-  const loadFiles = async (e) => {
+  const loadFiles = async () => {
+    URL.revokeObjectURL(ipfsImg.localfirst);
+    URL.revokeObjectURL(ipfsImg.locallast);
     console.time("Load Files");
     const loadImageBlob = (imgURL) => {
       return new Promise((resolve, reject) => {
@@ -83,41 +60,43 @@ const MetaIPFS = ({
           });
       });
     };
-    setSpinLoad(true);
-    setToastProcessList((prevState) => [
-      ...prevState,
-      { type: "alert-info", status: "processing", id: "ipfsLoad", message: `Loading Images for IPFS upload` },
-    ]);
-    const blobs = await Promise.all(metadata.map(async (nft) => loadImageBlob(nft.imagedata)));
 
+    console.log(metadata[0].imagedata)
+    const blobs = await Promise.allSettled(metadata.map(async (nft) => loadImageBlob(nft.imagedata)));
+  
     blobs.forEach(async (blob, i) => {
       let file = {
         path: `${address}/${i + 1}.png`,
-        content: blob,
+        content: blob.value,
       };
       files.push(file);
     });
-    setImgFiles(files);
-    setSpinLoad(false);
-    setToastProcessList((prevState) => [
-      ...toastProcessList.splice(
-        toastProcessList.findIndex((e) => e.id === "ipfsLoad"),
-        1
-      ),
-    ]);
-    setToastList((prevState) => [
-      ...prevState,
-      { type: "alert-info", status: "info", message: `Files loaded for IPFS upload: ${Intl.NumberFormat().format(parseInt(files.length))} files` },
-    ]);
-    e.preventDefault();
+    // setImgFiles(files);
+
+    //  e.preventDefault();
     console.timeEnd("Load Files");
+
+    return files;
   };
 
   const handleUpload = async (e) => {
     e.preventDefault();
     setSpinLoad(true);
+    setToastProcessList((prevState) => [
+      ...prevState,
+      {
+        type: "alert-info",
+        status: "processing",
+        id: "ipfsLoad",
+        message: `Uploading images to IPFS`,
+        time: new Date(Date.now()).toLocaleTimeString(),
+      },
+    ]);
 
+    let filelist;
     try {
+      filelist = await loadFiles();
+      console.log(filelist)
       const options = {
         wrapWithDirectory: false,
         //progress: (prog, path) => console.log(`received: ${prog} / ${path} `),
@@ -125,9 +104,9 @@ const MetaIPFS = ({
       let count = 0;
       let urls = [];
       // let fileHashes = [];
-      await startInfura();
-      for await (const file of ipfsInfura.addAll(imgFiles, options)) {
-        if (count < imgFiles.length) {
+
+      for await (const file of ipfs.addAll(filelist, options)) {
+        if (count < filelist.length) {
           const url = `https://ipfs.infura.io/ipfs/${file.cid.toString()}`;
           //let hash = { cid: file.cid };
           //fileHashes.push(hash);
@@ -139,63 +118,121 @@ const MetaIPFS = ({
         count++;
       }
 
-      let ipfsURL = `<a href="https://ipfs.infura.io/ipfs/${finalCID}" target="_blank" className="link break-all">https://ipfs.infura.io/ipfs/${finalCID}</a>`;
-      setUrlArr(urls);
-      setFinalImg({ imgsrc: urls[urls.length - 1], length: urls.length });
-      setCollectionInfo((prevState) => ({ ...prevState, imagecid: finalCID }));
+      //setUrlArr(urls);
+      setIpfsImg((prevState) => ({ ...prevState, length: urls.length, cid: finalCID }));
 
-      setToastList([...toastList, { type: "alert-success", status: "success", message: `IPFS Pin Successful: ${ipfsURL}` }]);
-    } catch (err) {
-      setToastList([...toastList, { type: "alert-error", status: "error", message: `${err.message}` }]);
-      console.log(err);
-    } finally {
-      //stopIPFS();
+      for await (const buf of ipfs.cat(`/ipfs/${finalCID}/${filelist.length}.png`)) {
+        // do something with buf
+
+        const blob = new Blob([buf], { type: "image/png" });
+
+        const objectURL = URL.createObjectURL(blob);
+        setIpfsImg((prevState) => ({ ...prevState, locallast: objectURL }));
+      }
+
+      for await (const buf of ipfs.cat(`/ipfs/${finalCID}/1.png`)) {
+        // do something with buf
+
+        const blob = new Blob([buf], { type: "image/png" });
+
+        const objectURL = URL.createObjectURL(blob);
+        setIpfsImg((prevState) => ({ ...prevState, localfirst: objectURL }));
+      }
+
+      //await startInfura();
+      //let infuracid = await ipfsInfura.pin.add(CID.parse(finalCID));
+      //console.log("INFURA:", infuracid);
 
       try {
-        const res = await fetch(`https://ipfs.infura.io/ipfs/${finalCID}`);
+        const res = await fetch(`${ipfsImg.infura}${finalCID}/${filelist.length}.png`);
         if (res.status === 200) {
+          let ipfsURL = `<a href="${ipfsImg.infura}${finalCID}" target="_blank" className="link break-all">${ipfsImg.infura}${finalCID}</a>`;
           console.log("infura request succeeded");
+          setToastList((prevState) => [
+            ...prevState,
+            { type: "alert-success", status: "success", message: `IPFS Pin Successful: ${ipfsURL}`, time: new Date(Date.now()).toLocaleTimeString() },
+          ]);
           stopIPFS();
         } else {
-          const res2 = await fetch(`https://gateway.pinata.cloud/ipfs/${finalCID}`);
+          const res2 = await fetch(`${ipfsImg.cf}${finalCID}/${filelist.length}.png`);
           if (res2.status === 200) {
-            console.log("pinata request succeeded");
+            let ipfsURL = `<a href="${ipfsImg.cf}${finalCID}" target="_blank" className="link break-all">${ipfsImg.cf}${finalCID}</a>`;
+            console.log("cloudflare request succeeded");
+            setToastList((prevState) => [
+              ...prevState,
+              {
+                type: "alert-success",
+                status: "success",
+                message: `IPFS Pin Successful: ${ipfsURL}`,
+                time: new Date(Date.now()).toLocaleTimeString(),
+              },
+            ]);
             stopIPFS();
           } else {
-            const res3 = await fetch(`https://ipfs.io/ipfs/${finalCID}`);
+            const res3 = await fetch(`${ipfsImg.dweb}${finalCID}/${filelist.length}.png`);
             if (res3.status === 200) {
-              console.log("IPFS request succeeded");
+              let ipfsURL = `<a href="${ipfsImg.dweb}${finalCID}" target="_blank" className="link break-all">${ipfsImg.dweb}${finalCID}</a>`;
+              console.log("dweb link request succeeded");
+              setToastList((prevState) => [
+                ...prevState,
+                {
+                  type: "alert-success",
+                  status: "success",
+                  message: `IPFS Pin Successful: ${ipfsURL}`,
+                  time: new Date(Date.now()).toLocaleTimeString(),
+                },
+              ]);
               stopIPFS();
-            } else console.error("IPFS GATEWAY TIMED OUT");
+            } else {
+              const res4 = await fetch(`${ipfsImg.pinata}${finalCID}/${filelist.length}.png`);
+              if (res4.status === 200) {
+                let ipfsURL = `<a href="${ipfsImg.pinata}${finalCID}" target="_blank" className="link break-all">${ipfsImg.pinata}${finalCID}</a>`;
+                console.log("pinata request succeeded");
+                setToastList((prevState) => [
+                  ...prevState,
+                  {
+                    type: "alert-success",
+                    status: "success",
+                    message: `IPFS Pin Successful: ${ipfsURL}`,
+                    time: new Date(Date.now()).toLocaleTimeString(),
+                  },
+                ]);
+                stopIPFS();
+              } else {
+                console.error("IPFS GATEWAY TIMED OUT");
+                setToastList((prevState) => [
+                  ...prevState,
+                  { type: "alert-error", status: "error", message: `IPFS Gateway Timed Out`, time: new Date(Date.now()).toLocaleTimeString() },
+                ]);
+              }
+            }
           }
         }
       } catch (err) {
         console.log(err);
+        setToastList((prevState) => [
+          ...prevState,
+          { type: "alert-error", status: "error", message: `${err.message}`, time: new Date(Date.now()).toLocaleTimeString() },
+        ]);
       }
-
+    } catch (err) {
+      setToastList((prevState) => [
+        ...prevState,
+        { type: "alert-error", status: "error", message: `${err.message}`, time: new Date(Date.now()).toLocaleTimeString() },
+      ]);
+      console.log(err);
+    } finally {
+      setToastProcessList((prevState) => [...prevState].filter((e) => e.id !== "ipfsLoad"));
       setSpinLoad(false);
     }
 
     //console.log(urlArr);
   };
 
-  const handleImageUpdate = (e) => {
-    e.preventDefault();
-
-    const cid = collectionInfo.imagecid;
-    const length = finalImg.length;
-    const ipfsimgs = {
-      first: `https://ipfs.infura.io/ipfs/${cid}/1.png`,
-      last: `https://ipfs.infura.io/ipfs/${cid}/${length}.png`,
-    };
-
-    setIpfsImg(ipfsimgs);
-  };
-
   const handleMetaUpdate = (e) => {
     e.preventDefault();
     const metadataArr = [...metadata];
-    const cid = collectionInfo.imagecid;
+    const cid = ipfsImg.cid;
     console.time("Update Metadata");
     metadataArr.forEach((nft, index) => (nft.image = `ipfs://${cid}/${index + 1}.png`));
 
@@ -204,83 +241,98 @@ const MetaIPFS = ({
     console.timeEnd("Update Metadata");
   };
 
-  const handleCIDinput = (e) => {
-    const { value } = e.target;
-
-    setCollectionInfo((prevState) => ({ ...prevState, imagecid: value }));
-  };
-
-  useEffect(() => {
-    setIPFScid(collectionInfo.imagecid);
-  }, [collectionInfo.imagecid]);
-
   useEffect(() => {
     return function cleanup() {
       //stopIPFS();
+      if (ipfsImg.localfirst) URL.revokeObjectURL(ipfsImg.localfirst);
+      if (ipfsImg.locallast) URL.revokeObjectURL(ipfsImg.locallast);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div>
       <h2 className="text-2xl font-bold mb-5">IPFS Upload</h2>
-      <button className="mx-4 my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm" onClick={loadFiles}>
-        Load Files for Uploading
-      </button>
       <button className="mx-4 my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm" onClick={handleUpload}>
-        Upload
+        Upload to IPFS
       </button>
-      <button className="mx-4 my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm" onClick={handleImageUpdate}>
-        Update Image Preview
-      </button>
+
       <button className="mx-4 my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm" onClick={handleMetaUpdate}>
         Update Metadata for latest IPFS hash/address
       </button>
-      <div className="mb-10">
-        If you face an error uploading. You may wish to download the generated images and manually upload them at Pinata
-        (https://app.pinata.cloud/pinmanager) and input the hash here.
-      </div>
-
-      <div className="form-control w-full max-w-full mb-5">
-        <div className="mt-5">
-          <label className="label flex-col  items-start">
-            <span className="label-text text-xl font-semibold">Image Folder IPFS CID/Hash</span>
-            <a href={`https://ipfs.infura.io/ipfs/${ipfscid}`} target="_blank" rel="noreferrer" className="btn btn-link">
-              Click to view
-            </a>
-          </label>
-          <input
-            type="text"
-            placeholder="Image Folder IPFS CID"
-            className="input input-bordered w-full font-medium tracking-wide"
-            name="imagecid"
-            value={ipfscid}
-            onChange={handleCIDinput}
-          />
-        </div>
-      </div>
 
       <div className="display">
-        {urlArr.length !== 0 ? (
+        {ipfsImg.cid && (
           <>
-            <div className="flex flex-row ">
-              <div className="flex flex-col items-center mx-2">
-                First Image from IPFS <img src={ipfsImg.first} alt="nfts" className="w-32" />
-              </div>
-              <div className="flex flex-col items-center">
-                First Image from Memory <img src={metadata[0].imagedata} alt="nfts" className="w-32" />
-              </div>
+            <div className="flex flex-col md:flex-row my-5 gap-5 items-center">
+              IPFS Hash:
+              <a className="link break-all" href={`${ipfsImg.infura}${ipfsImg.cid}`} target="_blank" rel="noreferrer">
+                {ipfsImg.cid}
+              </a>
+              <button
+                className=" btn  btn-primary btn-sm lowercase  text-lg rounded-full tooltip tooltip-right  "
+                data-tip="Copy IPFS Hash"
+                value={ipfsImg.cid}
+                onClick={(e) => copyTextOnClick(e)}
+              >
+                Copy
+              </button>
             </div>
-            <div className="flex flex-row">
-              <div className="flex flex-col items-center mx-2">
-                Last Image from IPFS ({finalImg.length}) <img src={ipfsImg.last} alt="nfts" className="w-32" />
+            <div className="flex flex-col md:flex-row justify-between my-5 ">
+              <div className="block  text-center ">
+                <span className="text-center font-semibold underline">First Image</span>
+
+                <div className="flex flex-col md:flex-row justify-between  gap-5 items-center">
+                  <div className="flex flex-col items-center w-32 h-32 ">
+                    Local IPFS <img src={`${ipfsImg.localfirst}`} alt="nfts" className="w-32 h-32" />
+                  </div>
+                  <div className="flex flex-col items-center w-32 h-32 ">
+                    Pinata <img src={`${ipfsImg.pinata}${ipfsImg.cid}/1.png`} alt="nfts" className="w-32 h-32" />
+                  </div>
+                  <div className="flex flex-col items-center w-32 h-32">
+                    Infura <img src={`${ipfsImg.infura}${ipfsImg.cid}/1.png`} alt="nfts" className="w-32 h-32" />
+                  </div>
+                </div>
+                <div className="flex flex-col md:flex-row justify-between gap-5 my-10 items-center">
+                  <div className="flex flex-col items-center  w-32 h-32">
+                    IPFS Gateway <img src={`${ipfsImg.ipfs}${ipfsImg.cid}/1.png`} alt="nfts" className="w-32 h-32" />
+                  </div>
+                  <div className="flex flex-col items-center w-32 h-32">
+                    Cloudflare <img src={`${ipfsImg.cf}${ipfsImg.cid}/1.png`} alt="nfts" className="w-32 h-32" />
+                  </div>
+                  <div className="flex flex-col items-center  w-32 h-32">
+                    Dweb <img src={`${ipfsImg.dweb}${ipfsImg.cid}/1.png`} alt="nfts" className="w-32 h-32" />
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-col items-center">
-                Last Image from Memory ({metadata.length}) <img src={metadata[metadata.length - 1].imagedata} alt="nfts" className="w-32" />
+              <div className="block  text-center ">
+                <span className="text-center font-semibold underline">Last Image</span>
+
+                <div className="flex flex-col md:flex-row justify-between  gap-5 items-center">
+                  <div className="flex flex-col items-center w-32 h-32 ">
+                    Local IPFS <img src={`${ipfsImg.locallast}`} alt="nfts" className="w-32 h-32" />
+                  </div>
+                  <div className="flex flex-col items-center w-32 h-32 ">
+                    Pinata <img src={`${ipfsImg.pinata}${ipfsImg.cid}/${ipfsImg.length}.png`} alt="nfts" className="w-32 h-32" />
+                  </div>
+                  <div className="flex flex-col items-center w-32 h-32">
+                    Infura <img src={`${ipfsImg.infura}${ipfsImg.cid}/${ipfsImg.length}.png`} alt="nfts" className="w-32 h-32" />
+                  </div>
+                </div>
+                <div className="flex flex-col md:flex-row justify-between gap-5 my-10 items-center">
+                  <div className="flex flex-col items-center  w-32 h-32">
+                    IPFS Gateway <img src={`${ipfsImg.ipfs}${ipfsImg.cid}/${ipfsImg.length}.png`} alt="nfts" className="w-32 h-32" />
+                  </div>
+                  <div className="flex flex-col items-center w-32 h-32">
+                    Cloudflare <img src={`${ipfsImg.cf}${ipfsImg.cid}/${ipfsImg.length}.png`} alt="nfts" className="w-32 h-32" />
+                  </div>
+                  <div className="flex flex-col items-center  w-32 h-32">
+                    Dweb <img src={`${ipfsImg.dweb}${ipfsImg.cid}/${ipfsImg.length}.png`} alt="nfts" className="w-32 h-32" />
+                  </div>
+                </div>
               </div>
             </div>
           </>
-        ) : (
-          ""
         )}
       </div>
     </div>

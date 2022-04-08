@@ -3,7 +3,13 @@ const webpack = require("webpack");
 module.exports = function override(config) {
   const fallback = config.resolve.fallback || {};
   Object.assign(fallback, {
-    util: require.resolve("util/"),
+    os: require.resolve("os-browserify/browser"),
+    https: require.resolve("https-browserify"),
+    http: require.resolve("stream-http"),
+    url: require.resolve("url"),
+    crypto: require.resolve("crypto-browserify"),
+    assert: require.resolve("assert"),
+    stream: require.resolve("stream-browserify"),
     buffer: require.resolve("buffer"),
   });
   config.resolve.fallback = fallback;

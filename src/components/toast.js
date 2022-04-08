@@ -29,17 +29,15 @@ const Toast = (props) => {
 
   useEffect(() => {
     setProcessList(toastProcessList);
-  }, [toastList, toastProcessList]);
+  }, [toastProcessList, processList]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (toastList.length && list.length) {
+    const toastlimit = 4;
+    if (toastList.length && list.length) {
+      if (toastList.length > toastlimit && list.length > toastlimit) {
         closeToast(0);
       }
-    }, 3000);
-    return () => {
-      clearInterval(interval);
-    };
+    }
   }, [closeToast, list, toastList]);
 
   return (
@@ -76,8 +74,11 @@ const Toast = (props) => {
                 )}
               </svg>
             )}
-            <div className="flex flex-col">
-              <h1 className=" font-bold capitalize"> {toast.status}</h1>
+            <div className="flex flex-col  w-full">
+              <div className="flex flex-row justify-between  w-full">
+                <h1 className=" font-bold capitalize"> {toast.status}</h1>
+                <p className="">{toast.time}</p>
+              </div>
               <div className="break-words">{parse(toast.message)}</div>
             </div>
           </div>
@@ -119,8 +120,11 @@ const Toast = (props) => {
                 />
               </svg>
             )}
-            <div className="flex flex-col">
-              <h1 className=" font-bold capitalize"> {toast.status}</h1>
+            <div className="flex flex-col  w-full">
+              <div className="flex flex-row justify-between  w-full">
+                <h1 className=" font-bold capitalize"> {toast.status}</h1>
+                <p className="">{toast.time}</p>
+              </div>
               <div className="break-words">{parse(toast.message)}</div>
             </div>
           </div>
