@@ -61,7 +61,7 @@ const MetaIPFS = ({ metadata, setMeta, setToastList, setSpinLoad, setToastProces
       });
     };
 
-    console.log(metadata[0].imagedata)
+  
     const blobs = await Promise.allSettled(metadata.map(async (nft) => loadImageBlob(nft.imagedata)));
   
     blobs.forEach(async (blob, i) => {
