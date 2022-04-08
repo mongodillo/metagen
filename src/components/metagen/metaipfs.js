@@ -262,7 +262,7 @@ const MetaIPFS = ({ metadata, setMeta, setToastList, setSpinLoad, setToastProces
 
       <button className="mx-4 my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm gap-2 btn-disabled">
         Upload Metadata to IPFS
-        <div class="badge badge-error">Coming Soon</div>
+        <div className="badge badge-error">Coming Soon</div>
       </button>
 
       <div className="display">

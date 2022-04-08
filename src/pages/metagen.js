@@ -584,12 +584,14 @@ const Metagen = (props) => {
               <button className="my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm" onClick={() => genImage()}>
                 Generate Images
               </button>
-              <button
-                className="mx-4 my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm"
-                onClick={() => downloadGeneratedFiles()}
-              >
-                Download Generated Files
-              </button>
+              {meta.length > 0 && meta[0].imagedata !== "" && (
+                <button
+                  className="mx-4 my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm"
+                  onClick={() => downloadGeneratedFiles()}
+                >
+                  Download Generated Files
+                </button>
+              )}
             </div>
             <div className="flex lg:flex-row flex-col items-center ">
               <label htmlFor="metauploadimginput" className="my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm">
