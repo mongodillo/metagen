@@ -12,7 +12,7 @@ import { metaRandomGen } from "../components/metagen/metarandomgen";
 import JSZip from "jszip";
 
 const Metagen = (props) => {
-  const { setToastList, toastList, setToastProcessList, toastProcessList, setSpinLoad } = props;
+  const { setToastList, setToastProcessList, setSpinLoad } = props;
   const [traits, setTrait] = useState([{ trait: "", options: [{ name: "", weight: "", imgsrc: "", filename: "", rarity: "", max: "" }] }]);
   const [weights, setWeight] = useState({});
   const [maxGen, setMaxGen] = useState(0);
@@ -37,19 +37,31 @@ const Metagen = (props) => {
   const getWeights = (traitsArray) => {
     let w = {};
     if (traitsArray[0].trait === "") {
-      setToastList([...toastList, { type: "alert-error", status: "error", message: `Traits field is empty` }]);
+      setToastList((prevState) => [
+        ...prevState,
+        { type: "alert-error", status: "error", message: `Traits field is empty`, time: new Date(Date.now()).toLocaleTimeString() },
+      ]);
     } else {
       if (traitsArray[0].options[0].name === "" || traitsArray[0].options[0].weight === "" || traitsArray[0].options[0].rarity === "") {
-        setToastList([...toastList, { type: "alert-error", status: "error", message: `Traits Option field is empty` }]);
+        setToastList((prevState) => [
+          ...prevState,
+          { type: "alert-error", status: "error", message: `Traits Option field is empty`, time: new Date(Date.now()).toLocaleTimeString() },
+        ]);
       } else {
         for (let i = 0; i < traitsArray.length; i++) {
           if (traitsArray[i].trait === "") {
-            setToastList([...toastList, { type: "alert-error", status: "error", message: `Trait ${i} is empty` }]);
+            setToastList((prevState) => [
+              ...prevState,
+              { type: "alert-error", status: "error", message: `Trait ${i} is empty`, time: new Date(Date.now()).toLocaleTimeString() },
+            ]);
           } else {
             w[traitsArray[i].trait] = [];
             for (let x = 0; x < traitsArray[i].options.length; x++) {
               if (traitsArray[i].options[x].name === "" || traitsArray[i].options[x].weight === "" || traitsArray[i].options[x].rarity === "") {
-                setToastList([...toastList, { type: "alert-error", status: "error", message: `Option ${x} is empty` }]);
+                setToastList((prevState) => [
+                  ...prevState,
+                  { type: "alert-error", status: "error", message: `Option ${x} is empty`, time: new Date(Date.now()).toLocaleTimeString() },
+                ]);
               } else {
                 w[traitsArray[i].trait].push({
                   name: traitsArray[i].options[x].name,
@@ -75,7 +87,10 @@ const Metagen = (props) => {
         });
         setMaxGen(parseInt(totalOptions));
 
-        setToastList([...toastList, { type: "alert-success", status: "success", message: `Weights Generated` }]);
+        setToastList((prevState) => [
+          ...prevState,
+          { type: "alert-success", status: "success", message: `Weights Generated`, time: new Date(Date.now()).toLocaleTimeString() },
+        ]);
       }
     }
   };
@@ -115,21 +130,30 @@ const Metagen = (props) => {
 
   const runRandomGen = async () => {
     if (maxGen === 0 || Object.keys(weights).length === 0) {
-      setToastList([
-        ...toastList,
-        { type: "alert-error", status: "error", message: `Weights not loaded for meta generation. Please click on "Generate Weights` },
+      setToastList((prevState) => [
+        ...prevState,
+        {
+          type: "alert-error",
+          status: "error",
+          message: `Weights not loaded for meta generation. Please click on "Generate Weights`,
+          time: new Date(Date.now()).toLocaleTimeString(),
+        },
       ]);
     } else if (totalGen === "" || totalGen === 0) {
-      setToastList([...toastList, { type: "alert-error", status: "error", message: `No quantity detected` }]);
+      setToastList((prevState) => [
+        ...prevState,
+        { type: "alert-error", status: "error", message: `No quantity detected`, time: new Date(Date.now()).toLocaleTimeString() },
+      ]);
     } else {
       try {
-        setToastProcessList([
-          ...toastProcessList,
+        setToastProcessList((prevState) => [
+          ...prevState,
           {
             type: "alert-info",
             status: "processing",
             id: "randomGen",
             message: `Generating Metadata for ${Intl.NumberFormat().format(parseInt(totalGen))} NFTs...`,
+            time: new Date(Date.now()).toLocaleTimeString(),
           },
         ]);
         console.log(`Generating Metadata for ${Intl.NumberFormat().format(parseInt(totalGen))} NFTs...`);
@@ -138,19 +162,22 @@ const Metagen = (props) => {
 
         const randommeta = await metaRandomGen(weights, seed, totalGen, collectionInfo.name, collectionInfo.description);
         setMeta(randommeta);
-        setToastProcessList([
-          ...toastProcessList.splice(
-            toastProcessList.findIndex((e) => e.id === "randomGen"),
-            1
-          ),
-        ]);
-        setToastList([
-          ...toastList,
-          { type: "alert-success", status: "success", message: `Metadata Generated for ${Intl.NumberFormat().format(parseInt(totalGen))} NFTs` },
+        setToastProcessList((prevState) => [...prevState].filter((e) => e.id !== "randomGen"));
+        setToastList((prevState) => [
+          ...prevState,
+          {
+            type: "alert-success",
+            status: "success",
+            message: `Metadata Generated for ${Intl.NumberFormat().format(parseInt(totalGen))} NFTs`,
+            time: new Date(Date.now()).toLocaleTimeString(),
+          },
         ]);
         countTraits(randommeta);
       } catch (err) {
-        setToastList([...toastList, { type: "alert-error", status: "error", message: `${err.message}` }]);
+        setToastList((prevState) => [
+          ...prevState,
+          { type: "alert-error", status: "error", message: `${err.message}`, time: new Date(Date.now()).toLocaleTimeString() },
+        ]);
       } finally {
         setSpinLoad(false);
       }
@@ -182,15 +209,29 @@ const Metagen = (props) => {
         try {
           const JSONdata = JSON.parse(e.target.result);
           if (JSONdata[0].name === undefined || JSONdata[0].attributes === null) {
-            setToastList([...toastList, { type: "alert-error", status: "error", message: `${filename} does not contain correct key values` }]);
+            setToastList((prevState) => [
+              ...prevState,
+              {
+                type: "alert-error",
+                status: "error",
+                message: `${filename} does not contain correct key values`,
+                time: new Date(Date.now()).toLocaleTimeString(),
+              },
+            ]);
           } else {
             setMeta(JSONdata);
             setTotalGen(JSONdata.length);
             countTraits(JSONdata);
-            setToastList([...toastList, { type: "alert-success", status: "success", message: `${filename} uploaded` }]);
+            setToastList((prevState) => [
+              ...prevState,
+              { type: "alert-success", status: "success", message: `${filename} uploaded`, time: new Date(Date.now()).toLocaleTimeString() },
+            ]);
           }
         } catch (err) {
-          setToastList([...toastList, { type: "alert-error", status: "error", message: `${err.message}` }]);
+          setToastList((prevState) => [
+            ...prevState,
+            { type: "alert-error", status: "error", message: `${err.message}`, time: new Date(Date.now()).toLocaleTimeString() },
+          ]);
         }
       };
     }
@@ -221,10 +262,21 @@ const Metagen = (props) => {
       setLoadingWidth((Number(count / totalGen) * 100).toFixed(0));
     }, 10);
 
-    if (Object.keys(w).length === 0) setToastList([...toastList, { type: "alert-error", status: "error", message: `Weights not loaded` }]);
-    else if (meta.length === 0) setToastList([...toastList, { type: "alert-error", status: "error", message: `Metadata not loaded` }]);
+    if (Object.keys(w).length === 0)
+      setToastList((prevState) => [
+        ...prevState,
+        { type: "alert-error", status: "error", message: `Weights not loaded`, time: new Date(Date.now()).toLocaleTimeString() },
+      ]);
+    else if (meta.length === 0)
+      setToastList((prevState) => [
+        ...prevState,
+        { type: "alert-error", status: "error", message: `Metadata not loaded`, time: new Date(Date.now()).toLocaleTimeString() },
+      ]);
     else if (Object.keys(w).length < meta[0].attributes.length)
-      setToastList([...toastList, { type: "alert-error", status: "error", message: `Trait Options  do not match Metadata` }]);
+      setToastList((prevState) => [
+        ...prevState,
+        { type: "alert-error", status: "error", message: `Trait Options  do not match Metadata`, time: new Date(Date.now()).toLocaleTimeString() },
+      ]);
     //attr => meta[i].attributes
     else {
       let statuslog = [];
@@ -280,7 +332,10 @@ const Metagen = (props) => {
             newmeta[i].imagedata = "";
           }
         } catch (err) {
-          setToastList([...toastList, { type: "alert-error", status: "error", message: `Canvas Drawing: ${err.message}` }]);
+          setToastList((prevState) => [
+            ...prevState,
+            { type: "alert-error", status: "error", message: `Canvas Drawing: ${err.message}`, time: new Date(Date.now()).toLocaleTimeString() },
+          ]);
         } finally {
         }
         //console.log(`Image ${i + 1} done`);
@@ -301,6 +356,7 @@ const Metagen = (props) => {
           type: "alert-error",
           status: "error",
           message: `${statuslog ? statuslog.map((status, i) => `<div key='statuslog${i}'><p>${status}</p></div>`) : ""}`,
+          time: new Date(Date.now()).toLocaleTimeString(),
         });
       addToast.push({
         type: "alert-success",
@@ -308,18 +364,25 @@ const Metagen = (props) => {
         message: `Total time taken to generate images for ${Intl.NumberFormat().format(
           parseInt(totalGen)
         )} NFTs: ${days} days ${hours} hours ${minutes} minutes ${seconds} seconds`,
+        time: new Date(Date.now()).toLocaleTimeString(),
       });
 
-      setToastList([...toastList, ...addToast]);
+      setToastList((prevState) => [...prevState, ...addToast]);
     }
     setIsLoading(false);
   };
 
   const downloadGeneratedFiles = async () => {
     setSpinLoad(true);
-    setToastProcessList([
-      ...toastProcessList,
-      { type: "alert-info", status: "processing", id: "downloadGenFiles", message: `Saving Images, metadata, and weights to file...${Date.now()}` },
+    setToastProcessList((prevState) => [
+      ...prevState,
+      {
+        type: "alert-info",
+        status: "processing",
+        id: "downloadGenFiles",
+        message: `Saving Images, metadata, and weights to file...${Date.now()}`,
+        time: new Date(Date.now()).toLocaleTimeString(),
+      },
     ]);
 
     const loadImageBlob = (imgURL) => {
@@ -366,23 +429,19 @@ const Metagen = (props) => {
         .then(() => {
           link.click();
           setSpinLoad(false);
-          setToastProcessList([
-            ...toastProcessList.splice(
-              toastProcessList.findIndex((e) => e.id === "downloadGenFiles"),
-              1
-            ),
+          setToastProcessList((prevState) => [...prevState].filter((e) => e.id !== "downloadGenFiles"));
+          setToastList((prevState) => [
+            ...prevState,
+            { type: "alert-success", status: "success", message: `File ready for download`, time: new Date(Date.now()).toLocaleTimeString() },
           ]);
-          setToastList([...toastList, { type: "alert-success", status: "success", message: `File ready for download` }]);
         })
         .then(() => URL.revokeObjectURL(zipURL));
     } catch (err) {
-      setToastProcessList([
-        ...toastProcessList.splice(
-          toastProcessList.findIndex((e) => e.id === "downloadGenFiles"),
-          1
-        ),
+      setToastProcessList((prevState) => [...prevState].filter((e) => e.id !== "downloadGenFiles"));
+      setToastList((prevState) => [
+        ...prevState,
+        { type: "alert-error", status: "error", message: `${err.message}`, time: new Date(Date.now()).toLocaleTimeString() },
       ]);
-      setToastList([...toastList, { type: "alert-error", status: "error", message: `${err.message}` }]);
     }
   };
 
@@ -407,7 +466,7 @@ const Metagen = (props) => {
       <Metatab openTab={openTab} setOpenTab={setOpenTab} />
       <div className="px-5 pt-5 border rounded-b border-accent border-t-8 ">
         <div className={openTab === 1 ? "block" : "hidden"} id="traitsform">
-          <Traitsform getWeights={getWeights} setToastList={setToastList} toastList={toastList} traits={traits} setTrait={setTrait} />
+          <Traitsform getWeights={getWeights} setToastList={setToastList} traits={traits} setTrait={setTrait} />
         </div>
         <div className={openTab === 2 ? "block" : "hidden"} id="metagen">
           <h2 className="text-2xl font-bold">Meta Generator </h2>
@@ -556,12 +615,8 @@ const Metagen = (props) => {
             metadata={meta}
             setMeta={setMeta}
             setToastList={setToastList}
-            toastList={toastList}
             setSpinLoad={setSpinLoad}
             setToastProcessList={setToastProcessList}
-            toastProcessList={toastProcessList}
-            setCollectionInfo={setCollectionInfo}
-            collectionInfo={collectionInfo}
           />
         </div>
       </div>

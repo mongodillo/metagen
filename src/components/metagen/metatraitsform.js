@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { rarityDropdown, rarityWeights } from "../../data/rarityweights";
 
-const Traitsform = ({ getWeights, setToastList, toastList, traits, setTrait }) => {
+const Traitsform = ({ getWeights, setToastList, traits, setTrait }) => {
   const [isChecked, setIsChecked] = useState(Array(15).fill(false));
 
   const handleCheckedBox = (e, index) => {
@@ -97,7 +97,15 @@ const Traitsform = ({ getWeights, setToastList, toastList, traits, setTrait }) =
         try {
           const JSONdata = JSON.parse(e.target.result);
           if (JSONdata[0].trait === undefined || JSONdata[0].trait === null) {
-            setToastList([...toastList, { type: "alert-error", status: "error", message: `${filename} does not contain correct key values` }]);
+            setToastList((prevState) => [
+              ...prevState,
+              {
+                type: "alert-error",
+                status: "error",
+                message: `${filename} does not contain correct key values`,
+                time: new Date(Date.now()).toLocaleTimeString(),
+              },
+            ]);
           } else {
             let checkedArr = [...isChecked];
             checkedArr.fill(false);
@@ -108,10 +116,16 @@ const Traitsform = ({ getWeights, setToastList, toastList, traits, setTrait }) =
 
             setIsChecked(checkedArr);
             setTrait(JSONdata);
-            setToastList([...toastList, { type: "alert-success", status: "success", message: `${filename} uploaded` }]);
+            setToastList((prevState) => [
+              ...prevState,
+              { type: "alert-success", status: "success", message: `${filename} uploaded`, time: new Date(Date.now()).toLocaleTimeString() },
+            ]);
           }
         } catch (err) {
-          setToastList([...toastList, { type: "alert-error", status: "error", message: `${err.message}` }]);
+          setToastList((prevState) => [
+            ...prevState,
+            { type: "alert-error", status: "error", message: `${err.message}`, time: new Date(Date.now()).toLocaleTimeString() },
+          ]);
         }
       };
     }

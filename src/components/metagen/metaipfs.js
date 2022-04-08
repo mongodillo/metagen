@@ -96,7 +96,6 @@ const MetaIPFS = ({ metadata, setMeta, setToastList, setSpinLoad, setToastProces
     let filelist;
     try {
       filelist = await loadFiles();
-      console.log(filelist)
       const options = {
         wrapWithDirectory: false,
         //progress: (prog, path) => console.log(`received: ${prog} / ${path} `),
@@ -254,24 +253,29 @@ const MetaIPFS = ({ metadata, setMeta, setToastList, setSpinLoad, setToastProces
     <div>
       <h2 className="text-2xl font-bold mb-5">IPFS Upload</h2>
       <button className="mx-4 my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm" onClick={handleUpload}>
-        Upload to IPFS
+        Upload Images to IPFS
       </button>
 
       <button className="mx-4 my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm" onClick={handleMetaUpdate}>
         Update Metadata for latest IPFS hash/address
       </button>
 
+      <button className="mx-4 my-2 btn btn-primary rounded-full normal-case text-base font-bold btn-sm gap-2 btn-disabled">
+        Upload Metadata to IPFS
+        <div class="badge badge-error">Coming Soon</div>
+      </button>
+
       <div className="display">
         {ipfsImg.cid && (
           <>
             <div className="flex flex-col md:flex-row my-5 gap-5 items-center">
-              IPFS Hash:
+              Images IPFS Hash:
               <a className="link break-all" href={`${ipfsImg.infura}${ipfsImg.cid}`} target="_blank" rel="noreferrer">
                 {ipfsImg.cid}
               </a>
               <button
                 className=" btn  btn-primary btn-sm lowercase  text-lg rounded-full tooltip tooltip-right  "
-                data-tip="Copy IPFS Hash"
+                data-tip="Copy Images IPFS Hash"
                 value={ipfsImg.cid}
                 onClick={(e) => copyTextOnClick(e)}
               >
