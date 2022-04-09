@@ -61,9 +61,8 @@ const MetaIPFS = ({ metadata, setMeta, setToastList, setSpinLoad, setToastProces
       });
     };
 
-  
     const blobs = await Promise.allSettled(metadata.map(async (nft) => loadImageBlob(nft.imagedata)));
-  
+
     blobs.forEach(async (blob, i) => {
       let file = {
         path: `${address}/${i + 1}.png`,
@@ -92,6 +91,9 @@ const MetaIPFS = ({ metadata, setMeta, setToastList, setSpinLoad, setToastProces
         time: new Date(Date.now()).toLocaleTimeString(),
       },
     ]);
+
+    if (ipfsImg.localfirst) URL.revokeObjectURL(ipfsImg.localfirst);
+    if (ipfsImg.locallast) URL.revokeObjectURL(ipfsImg.locallast);
 
     let filelist;
     try {
